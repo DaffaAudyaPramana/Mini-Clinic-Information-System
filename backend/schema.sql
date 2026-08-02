@@ -256,13 +256,13 @@ ON CONFLICT (code) DO NOTHING;
 
 -- 2. Seed Users (Admin, Dokter, Petugas Pendaftaran)
 INSERT INTO users (id, name, email, password, role) VALUES
-  ('a1111111-1111-1111-1111-111111111111', 'Administrator Utama', 'admin@klinik.local', '$2b$10$kGLr/uvWKEhqQKdwQfSivO2cyPvRje93AMZ1t6bv2FyhaF2a6pz3O', 'administrator'),
-  ('d1111111-1111-1111-1111-111111111111', 'Dr. Ayu Rahmawati', 'dokter@klinik.local', '$2b$10$kGLr/uvWKEhqQKdwQfSivO2cyPvRje93AMZ1t6bv2FyhaF2a6pz3O', 'dokter'),
-  ('p1111111-1111-1111-1111-111111111111', 'Petugas Depan Budi', 'pendaftaran@klinik.local', '$2b$10$kGLr/uvWKEhqQKdwQfSivO2cyPvRje93AMZ1t6bv2FyhaF2a6pz3O', 'petugas_pendaftaran')
+  ('11111111-1111-1111-1111-111111111101', 'Administrator Utama', 'admin@klinik.local', '$2b$10$kGLr/uvWKEhqQKdwQfSivO2cyPvRje93AMZ1t6bv2FyhaF2a6pz3O', 'administrator'),
+  ('11111111-1111-1111-1111-111111111102', 'Dr. Ayu Rahmawati', 'dokter@klinik.local', '$2b$10$kGLr/uvWKEhqQKdwQfSivO2cyPvRje93AMZ1t6bv2FyhaF2a6pz3O', 'dokter'),
+  ('11111111-1111-1111-1111-111111111103', 'Petugas Depan Budi', 'pendaftaran@klinik.local', '$2b$10$kGLr/uvWKEhqQKdwQfSivO2cyPvRje93AMZ1t6bv2FyhaF2a6pz3O', 'petugas_pendaftaran')
 ON CONFLICT (email) DO NOTHING;
 
 -- 3. Seed Doctors Profile (relasi ke User & Poli)
 INSERT INTO doctors (id, user_id, poli_id, specialization, sip_number) VALUES
-  ('d2222222-2222-2222-2222-222222222222', 'd1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Dokter Umum', 'SIP-54321')
+  ('11111111-1111-1111-1111-111111111104', '11111111-1111-1111-1111-111111111102', '11111111-1111-1111-1111-111111111111', 'Dokter Umum', 'SIP-54321')
 ON CONFLICT (user_id) DO NOTHING;
 
