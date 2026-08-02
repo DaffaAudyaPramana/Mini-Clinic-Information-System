@@ -7,6 +7,11 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
+const patientRoutes_1 = __importDefault(require("./routes/patientRoutes"));
+const registrationRoutes_1 = __importDefault(require("./routes/registrationRoutes"));
+const queueRoutes_1 = __importDefault(require("./routes/queueRoutes"));
+const medicalRecordRoutes_1 = __importDefault(require("./routes/medicalRecordRoutes"));
+const dashboardRoutes_1 = __importDefault(require("./routes/dashboardRoutes"));
 const response_1 = require("./utils/response");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -15,6 +20,11 @@ app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 // Routes
 app.use('/api/auth', authRoutes_1.default);
+app.use('/api/patients', patientRoutes_1.default);
+app.use('/api/registrations', registrationRoutes_1.default);
+app.use('/api/queues', queueRoutes_1.default);
+app.use('/api/medical-records', medicalRecordRoutes_1.default);
+app.use('/api/dashboard', dashboardRoutes_1.default);
 // 404 Handler
 app.use((req, res) => {
     (0, response_1.errorResponse)(res, 'Route not found', 404);

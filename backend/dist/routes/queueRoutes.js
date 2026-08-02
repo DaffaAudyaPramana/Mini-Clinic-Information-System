@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const queueController_1 = require("../controllers/queueController");
+const authMiddleware_1 = require("../middlewares/authMiddleware");
+const router = (0, express_1.Router)();
+router.use(authMiddleware_1.authenticate);
+router.get('/', queueController_1.getQueues);
+router.post('/', (0, authMiddleware_1.authorizeRole)(['administrator', 'petugas_pendaftaran']), queueController_1.createQueue);
+router.put('/:id/status', (0, authMiddleware_1.authorizeRole)(['administrator', 'petugas_pendaftaran', 'dokter']), queueController_1.updateQueueStatus);
+exports.default = router;
