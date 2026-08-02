@@ -11,6 +11,16 @@ Sistem Informasi Klinik Mini ini dibuat sebagai bagian dari test case Agile Micr
 5. **Pemeriksaan Dokter (SOAP)**: Input Subjective, Objective, Assessment, Plan (termasuk tindakan medis dan resep obat).
 6. **Dashboard**: Ringkasan metrik harian.
 
+## User Uji Coba (Credentials for Testing)
+
+Semua user sampel menggunakan password: **`password123`**
+
+| Role | Email | Password | Nama |
+| :--- | :--- | :--- | :--- |
+| **Administrator** | `admin@klinik.local` | `password123` | Administrator Utama |
+| **Dokter** | `dokter@klinik.local` | `password123` | Dr. Ayu Rahmawati |
+| **Petugas Pendaftaran** | `pendaftaran@klinik.local` | `password123` | Petugas Depan Budi |
+
 ## Tech Stack
 
 *   **Backend:** Node.js, Express, TypeScript, `pg` (PostgreSQL), JWT, Bcrypt
@@ -27,7 +37,7 @@ Sistem Informasi Klinik Mini ini dibuat sebagai bagian dari test case Agile Micr
 ### 1. Setup Database
 1. Buat database PostgreSQL dengan nama `mini_clinic` (atau gunakan Docker).
 2. Jalankan script `backend/schema.sql` pada database tersebut.
-3. (Opsional) Lakukan seed data awal (Poli dan User Admin). *Harap hash password menggunakan bcrypt sebelum insert ke tabel users.*
+3. Seed data sampel (Poli dan 3 Akun User) sudah disertakan secara otomatis di akhir `schema.sql`.
 
 ### 2. Setup Backend
 1. Masuk ke folder `backend`: `cd backend`
@@ -39,21 +49,10 @@ Sistem Informasi Klinik Mini ini dibuat sebagai bagian dari test case Agile Micr
 1. Masuk ke folder `frontend`: `cd frontend`
 2. Install dependencies: `npm install`
 3. Sesuaikan file `.env` dari `.env.example` (VITE_API_URL).
-4. Jalankan frontend: `npm run dev`
+4. Jalankan frontend: `npm run dev` (Aplikasi berjalan di port 5173)
 
 ## Asumsi & Batasan (Sesuai Konteks Waktu Mepet)
 *   **Styling UI:** Menggunakan komponen Tailwind minimal standar tanpa desain custom ekstensif.
 *   **Halaman Detail:** Menggunakan list sederhana tanpa filter kompleks.
 *   **Pagination:** Menggunakan limit/offset standar (lihat endpoint `/api/patients`).
-*   **Manajemen Poli/Dokter:** Data Poli dan User diasumsikan di-seed langsung ke database karena keterbatasan waktu untuk membuat UI manajemen master data tersebut.
-
-## Postman Collection
-Silakan import collection Postman (jika ada file ekspor .json yang disertakan) atau gunakan request manual ke `http://localhost:3000/api/...`.
-
-## Video Demo
-Perekaman video demonstrasi aplikasi dapat dilakukan menggunakan OBS Studio atau screen recorder lainnya, berfokus pada end-to-end flow:
-1. Login sebagai Admin.
-2. Tambah Pasien.
-3. Pendaftaran & Antrean.
-4. Login sebagai Dokter -> Proses SOAP.
-5. Lihat Dashboard.
+*   **Manajemen Poli/Dokter:** Data Poli dan User Dokter di-seed langsung ke database PostgreSQL via `schema.sql`.
