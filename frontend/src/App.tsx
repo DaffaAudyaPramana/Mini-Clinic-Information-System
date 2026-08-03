@@ -4,8 +4,9 @@ import { Login } from './pages/Login';
 import { Patients } from './pages/Patients';
 import { Dashboard } from './pages/Dashboard';
 import { Registrations } from './pages/Registrations';
+import { DoctorSoap } from './pages/DoctorSoap';
 import { useAuth } from './contexts/AuthContext';
-import { Activity, LayoutDashboard, Users, Ticket, LogOut, ShieldCheck, Stethoscope, UserCheck, ChevronRight } from 'lucide-react';
+import { Activity, LayoutDashboard, Users, Ticket, Stethoscope, LogOut, ShieldCheck, UserCheck, ChevronRight } from 'lucide-react';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
@@ -35,6 +36,8 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const roleInfo = getRoleBadge(user?.role);
   const RoleIcon = roleInfo.icon;
 
+  const role = user?.role;
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row">
       {/* Sidebar Navigation */}
@@ -53,8 +56,9 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </div>
 
-          {/* Navigation Links */}
+          {/* Navigation Links - Role Differentiated */}
           <nav className="p-4 space-y-1.5">
+            {/* Dashboard (All Roles) */}
             <Link
               to="/dashboard"
               className={`flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
@@ -70,6 +74,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
               {location.pathname === '/dashboard' && <ChevronRight className="w-4 h-4 opacity-80" />}
             </Link>
 
+            {/* Master Pasien (Admin & Petugas Pendaftaran & Dokter) */}
             <Link
               to="/patients"
               className={`flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
@@ -85,20 +90,41 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
               {location.pathname === '/patients' && <ChevronRight className="w-4 h-4 opacity-80" />}
             </Link>
 
-            <Link
-              to="/registrations"
-              className={`flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
-                location.pathname === '/registrations'
-                  ? 'bg-gradient-to-r from-blue-600/90 to-teal-500/90 text-white shadow-lg shadow-blue-600/20'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Ticket className="w-5 h-5" />
-                <span>Pendaftaran & Antrean</span>
-              </div>
-              {location.pathname === '/registrations' && <ChevronRight className="w-4 h-4 opacity-80" />}
-            </Link>
+            {/* Pendaftaran & Antrean (Admin & Petugas Pendaftaran) */}
+            {(role === 'administrator' || role === 'petugas_pendaftaran') && (
+              <Link
+                to="/registrations"
+                className={`flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
+                  location.pathname === '/registrations'
+                    ? 'bg-gradient-to-r from-blue-600/90 to-teal-500/90 text-white shadow-lg shadow-blue-600/20'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Ticket className="w-5 h-5" />
+                  <span>Pendaftaran & Antrean</span>
+                </div>
+                {location.pathname === '/registrations' && <ChevronRight className="w-4 h-4 opacity-80" />}
+              </Link>
+            )}
+
+            {/* Pemeriksaan Dokter SOAP (Admin & Dokter) */}
+            {(role === 'administrator' || role === 'dokter') && (
+              <Link
+                to="/soap"
+                className={`flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
+                  location.pathname === '/soap'
+                    ? 'bg-gradient-to-r from-teal-600/90 to-emerald-500/90 text-white shadow-lg shadow-teal-600/20'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Stethoscope className="w-5 h-5 text-teal-400" />
+                  <span>Pemeriksaan SOAP Dokter</span>
+                </div>
+                {location.pathname === '/soap' && <ChevronRight className="w-4 h-4 opacity-80" />}
+              </Link>
+            )}
           </nav>
         </div>
 
@@ -167,6 +193,16 @@ function App() {
           <ProtectedRoute>
             <MainLayout>
               <Registrations />
+            </MainLayout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/soap" 
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <DoctorSoap />
             </MainLayout>
           </ProtectedRoute>
         } 
