@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Stethoscope, User, Clock, CheckCircle2, FileText, Plus, Trash2, Activity, Heart, Thermometer, Scale, AlertCircle, Save, History, Building2 } from 'lucide-react';
+import { Stethoscope, User, Clock, CheckCircle2, FileText, Plus, Trash2, Activity, Heart, Thermometer, Scale, AlertCircle, Save, Building2 } from 'lucide-react';
 
 interface QueueItem {
   id: string; // queue id
