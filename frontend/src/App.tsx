@@ -3,8 +3,9 @@ import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { Patients } from './pages/Patients';
 import { Dashboard } from './pages/Dashboard';
+import { Registrations } from './pages/Registrations';
 import { useAuth } from './contexts/AuthContext';
-import { Activity, LayoutDashboard, Users, LogOut, ShieldCheck, Stethoscope, UserCheck, ChevronRight } from 'lucide-react';
+import { Activity, LayoutDashboard, Users, Ticket, LogOut, ShieldCheck, Stethoscope, UserCheck, ChevronRight } from 'lucide-react';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
@@ -83,6 +84,21 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
               </div>
               {location.pathname === '/patients' && <ChevronRight className="w-4 h-4 opacity-80" />}
             </Link>
+
+            <Link
+              to="/registrations"
+              className={`flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
+                location.pathname === '/registrations'
+                  ? 'bg-gradient-to-r from-blue-600/90 to-teal-500/90 text-white shadow-lg shadow-blue-600/20'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Ticket className="w-5 h-5" />
+                <span>Pendaftaran & Antrean</span>
+              </div>
+              {location.pathname === '/registrations' && <ChevronRight className="w-4 h-4 opacity-80" />}
+            </Link>
           </nav>
         </div>
 
@@ -141,6 +157,16 @@ function App() {
           <ProtectedRoute>
             <MainLayout>
               <Patients />
+            </MainLayout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/registrations" 
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <Registrations />
             </MainLayout>
           </ProtectedRoute>
         } 

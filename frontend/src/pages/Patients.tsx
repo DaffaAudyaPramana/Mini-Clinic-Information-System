@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, UserPlus, Trash2, X, FileText, Phone, MapPin, Calendar, CreditCard, AlertCircle } from 'lucide-react';
+import { Search, UserPlus, Trash2, X, FileText, Phone, MapPin, Calendar, CreditCard, AlertCircle, Ticket, CheckCircle2 } from 'lucide-react';
 
 interface Patient {
   id: string;
@@ -14,6 +14,19 @@ interface Patient {
   created_at: string;
 }
 
+interface Poli {
+  id: string;
+  name: string;
+  code: string;
+}
+
+interface Doctor {
+  id: string;
+  poli_id: string;
+  specialization: string;
+  doctor_name: string;
+}
+
 export const Patients: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [search, setSearch] = useState('');
@@ -22,12 +35,27 @@ export const Patients: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  // Modal State
+  // Modal Create Patient State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalError, setModalError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Form State
+  // Modal Register Poli & Queue State
+  const [selectedPatientForReg, setSelectedPatientForReg] = useState<Patient | null>(null);
+  const [poliList, setPoliList] = useState<Poli[]>([]);
+  const [doctorList, setDoctorList] = useState<Doctor[]>([]);
+  const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>([]);
+  const [regFormData, setRegFormData] = useState({
+    poli_id: '',
+    doctor_id: '',
+    payment_type: 'umum',
+    complaint: ''
+  });
+  const [regSuccessQueue, setRegSuccessQueue] = useState<string | null>(null);
+  const [regError, setRegError] = useState('');
+  const [regSubmitting, setRegSubmitting] = useState(false);
+
+  // Form State Pasien Baru
   const [formData, setFormData] = useState({
     nik: '',
     name: '',
@@ -56,8 +84,22 @@ export const Patients: React.FC = () => {
     }
   };
 
+  const fetchOptions = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const response = await axios.get(`${apiUrl}/api/registrations/options`);
+      if (response.data.success) {
+        setPoliList(response.data.data.poli);
+        setDoctorList(response.data.data.doctors);
+      }
+    } catch (err) {
+      console.error('Failed to fetch options', err);
+    }
+  };
+
   useEffect(() => {
     fetchPatients();
+    fetchOptions();
   }, [page]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -105,6 +147,64 @@ export const Patients: React.FC = () => {
     }
   };
 
+  const handleOpenRegistrationModal = (patient: Patient) => {
+    setSelectedPatientForReg(patient);
+    setRegSuccessQueue(null);
+    setRegError('');
+    const defaultPoli = poliList[0]?.id || '';
+    setRegFormData({
+      poli_id: defaultPoli,
+      doctor_id: '',
+      payment_type: 'umum',
+      complaint: ''
+    });
+
+    if (defaultPoli) {
+      const docs = doctorList.filter(d => d.poli_id === defaultPoli);
+      setFilteredDoctors(docs);
+      if (docs.length > 0) {
+        setRegFormData(prev => ({ ...prev, poli_id: defaultPoli, doctor_id: docs[0].id }));
+      }
+    }
+  };
+
+  const handlePoliChange = (poliId: string) => {
+    const docs = doctorList.filter(d => d.poli_id === poliId);
+    setFilteredDoctors(docs);
+    setRegFormData(prev => ({
+      ...prev,
+      poli_id: poliId,
+      doctor_id: docs.length > 0 ? docs[0].id : ''
+    }));
+  };
+
+  const handleProcessRegistration = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPatientForReg) return;
+    setRegError('');
+    setRegSubmitting(true);
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const payload = {
+        patient_id: selectedPatientForReg.id,
+        poli_id: regFormData.poli_id,
+        doctor_id: regFormData.doctor_id,
+        payment_type: regFormData.payment_type,
+        complaint: regFormData.complaint
+      };
+
+      const response = await axios.post(`${apiUrl}/api/registrations`, payload);
+      if (response.data.success) {
+        setRegSuccessQueue(response.data.data.queue_number);
+      }
+    } catch (err: any) {
+      setRegError(err.response?.data?.error || 'Gagal mendaftarkan kunjungan.');
+    } finally {
+      setRegSubmitting(false);
+    }
+  };
+
   return (
     <div className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -114,7 +214,7 @@ export const Patients: React.FC = () => {
             <FileText className="w-7 h-7 text-blue-400" /> Master Data Pasien
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Kelola data pasien terdaftar, nomor rekam medis (No. RM), dan data NIK.
+            Kelola data pasien terdaftar, nomor rekam medis (No. RM), dan pendaftaran ke Poli.
           </p>
         </div>
 
@@ -159,7 +259,7 @@ export const Patients: React.FC = () => {
                 <th className="px-6 py-4">NIK</th>
                 <th className="px-6 py-4">L/P</th>
                 <th className="px-6 py-4">Kontak & Alamat</th>
-                <th className="px-6 py-4 text-right">Aksi</th>
+                <th className="px-6 py-4 text-right">Aksi & Pendaftaran</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 text-slate-200">
@@ -226,6 +326,13 @@ export const Patients: React.FC = () => {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
+                          onClick={() => handleOpenRegistrationModal(patient)}
+                          className="px-3 py-1.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-semibold rounded-xl text-xs shadow-md shadow-teal-500/20 flex items-center gap-1 transition-all"
+                        >
+                          <Ticket className="w-3.5 h-3.5" />
+                          <span>Daftar Poli</span>
+                        </button>
+                        <button
                           onClick={() => handleDeletePatient(patient.id, patient.name)}
                           className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl transition-colors"
                           title="Hapus Pasien"
@@ -268,15 +375,12 @@ export const Patients: React.FC = () => {
       {/* Modal Add Patient */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="glass-panel w-full max-w-lg p-6 rounded-3xl shadow-2xl border border-slate-700 relative animate-in fade-in zoom-in-95 duration-200">
+          <div className="glass-panel w-full max-w-lg p-6 rounded-3xl shadow-2xl border border-slate-700 relative">
             <div className="flex items-center justify-between pb-4 border-b border-slate-800">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <UserPlus className="w-5 h-5 text-blue-400" /> Tambah Pasien Baru
               </h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-white rounded-lg"
-              >
+              <button onClick={() => setIsModalOpen(false)} className="p-1 text-slate-400 hover:text-white rounded-lg">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -361,22 +465,124 @@ export const Patients: React.FC = () => {
               </div>
 
               <div className="pt-4 flex justify-end gap-3 border-t border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-medium"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 text-white font-semibold rounded-xl text-sm shadow-lg shadow-blue-500/20 flex items-center gap-2"
-                >
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-sm font-medium">Batal</button>
+                <button type="submit" disabled={submitting} className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-teal-500 text-white font-semibold rounded-xl text-sm shadow-lg">
                   {submitting ? 'Menyimpan...' : 'Simpan Pasien'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Registration to Poli & Queue */}
+      {selectedPatientForReg && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="glass-panel w-full max-w-lg p-6 rounded-3xl shadow-2xl border border-slate-700 relative">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Ticket className="w-5 h-5 text-teal-400" /> Pendaftaran Kunjungan Poli
+                </h3>
+                <p className="text-xs text-slate-400">Pasien: <span className="text-teal-300 font-semibold">{selectedPatientForReg.name}</span> ({selectedPatientForReg.no_rm})</p>
+              </div>
+              <button onClick={() => setSelectedPatientForReg(null)} className="p-1 text-slate-400 hover:text-white rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {regSuccessQueue ? (
+              <div className="mt-6 text-center space-y-4 py-4">
+                <div className="inline-flex p-4 bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/30 animate-bounce">
+                  <CheckCircle2 className="w-12 h-12" />
+                </div>
+                <h4 className="text-xl font-bold text-white">Pendaftaran Berhasil!</h4>
+                <p className="text-xs text-slate-400">Nomor Antrean Pasien Telah Di-generate Secara Otomatis:</p>
+                <div className="inline-block px-8 py-4 bg-gradient-to-r from-blue-600 to-teal-500 text-white font-mono text-4xl font-extrabold rounded-2xl shadow-xl shadow-blue-500/30">
+                  {regSuccessQueue}
+                </div>
+                <div className="pt-4">
+                  <button
+                    onClick={() => setSelectedPatientForReg(null)}
+                    className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl text-sm"
+                  >
+                    Tutup
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleProcessRegistration} className="mt-4 space-y-4">
+                {regError && (
+                  <div className="p-3 bg-red-950/60 border border-red-500/50 text-red-300 rounded-xl text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-400" /> {regError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Pilih Poliklinik Tujuan*</label>
+                  <div className="relative">
+                    <select
+                      className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-teal-500"
+                      value={regFormData.poli_id}
+                      onChange={(e) => handlePoliChange(e.target.value)}
+                    >
+                      {poliList.map(p => (
+                        <option key={p.id} value={p.id}>{p.name} ({p.code})</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Pilih Dokter Bertugas*</label>
+                  <select
+                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-teal-500"
+                    value={regFormData.doctor_id}
+                    onChange={(e) => setRegFormData({ ...regFormData, doctor_id: e.target.value })}
+                  >
+                    {filteredDoctors.length === 0 ? (
+                      <option value="">Tidak ada dokter di poli ini</option>
+                    ) : (
+                      filteredDoctors.map(d => (
+                        <option key={d.id} value={d.id}>{d.doctor_name} ({d.specialization})</option>
+                      ))
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Metode Pembayaran*</label>
+                  <select
+                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-teal-500"
+                    value={regFormData.payment_type}
+                    onChange={(e) => setRegFormData({ ...regFormData, payment_type: e.target.value })}
+                  >
+                    <option value="umum">Umum</option>
+                    <option value="bpjs">BPJS Kesehatan</option>
+                    <option value="asuransi">Asuransi Swasta</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Keluhan / Alasan Kunjungan</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Demam, pusing, batuk sejak 2 hari..."
+                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-teal-500 text-xs"
+                    value={regFormData.complaint}
+                    onChange={(e) => setRegFormData({ ...regFormData, complaint: e.target.value })}
+                  />
+                </div>
+
+                <div className="pt-4 flex justify-end gap-3 border-t border-slate-800">
+                  <button type="button" onClick={() => setSelectedPatientForReg(null)} className="px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-sm font-medium">Batal</button>
+                  <button type="submit" disabled={regSubmitting} className="px-5 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 text-white font-semibold rounded-xl text-sm shadow-lg flex items-center gap-2">
+                    <Ticket className="w-4 h-4" />
+                    {regSubmitting ? 'Memproses...' : 'Proses & Ambil Antrean'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
